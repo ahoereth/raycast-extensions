@@ -56,15 +56,6 @@ export function TaskListItem({
     }
   };
 
-  const formatMinutes = (minutes: number): string => {
-    if (minutes >= 60) {
-      const hours = Math.floor(minutes / 60);
-      const min = minutes % 60;
-      return `${hours} ${hours === 1 ? "hour" : "hours"} and ${min} min`;
-    }
-    return `${minutes} min`;
-  };
-
   const resolveTaskTime = (): string => {
     if (task.time?.recent > 0) {
       return `${formatSeconds(task.time.recent)} in the last 7 days`;
