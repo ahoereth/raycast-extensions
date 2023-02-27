@@ -25,6 +25,14 @@ export type TimeRecordResp = {
   task: TaskResp;
 };
 
+export type TimeRecordResp = {
+  id: number;
+  time: number;
+  user: number;
+  date: string;
+  task: TaskResp;
+};
+
 export type TaskTimerResp = {
   status: string;
   task: { name: string };
