@@ -24,23 +24,24 @@ export function TaskListItem({
 }: {
   task: Task;
   hasActiveTimer: boolean;
-  refreshActiveTimer: () => Promise<void>;
+  refreshActiveTimer: (id?: string | null) => Promise<void>;
   refreshRecords: () => Promise<Array<Task>>;
   recentTimeRecords: Array<Task>;
 }) {
   const [timeRecords, setTimeRecords] = useState<Array<Task>>(recentTimeRecords);
 
   const enableTaskTimer = async () => {
+    refreshActiveTimer(task.id);
     const toast = await showToast(ToastStyle.Animated, "Starting timer");
     try {
       const { taskName } = await startTaskTimer(task.id);
-      refreshActiveTimer();
       createResolvedToast(toast, "Timer started for " + taskName).success();
     } catch (error) {
       createResolvedToast(toast, "Error starting timer").error();
     }
   };
   const disableActiveTimer = async () => {
+    refreshActiveTimer("");
     const toast = await showToast(ToastStyle.Animated, "Stopping timer");
     try {
       const { taskName } = await stopCurrentTaskTimer();

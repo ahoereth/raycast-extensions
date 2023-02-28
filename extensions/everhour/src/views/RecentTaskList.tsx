@@ -10,19 +10,23 @@ export function RecentTaskList() {
   const [tasks, setTasks] = useState<Array<Task>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const refreshActiveTimer = async () => {
-    const toast = await showToast(ToastStyle.Animated, "Refreshing tasks");
-    try {
-      const activeTimer = await getCurrentTimer();
-      setActiveTimerTaskId(activeTimer);
-      createResolvedToast(toast, "Tasks refreshed").success();
-    } catch (error) {
-      createResolvedToast(toast, "Failed to refresh tasks").error();
+  const refreshActiveTimer = async (expectedActiveTimerTaskId: string | null = null) => {
+    if (expectedActiveTimerTaskId !== null) {
+      setActiveTimerTaskId(expectedActiveTimerTaskId);
+    } else {
+      const toast = await showToast(ToastStyle.Animated, "Refreshing timer");
+      try {
+        const activeTimer = await getCurrentTimer();
+        setActiveTimerTaskId(activeTimer);
+        createResolvedToast(toast, "Timer refreshed").success();
+      } catch (error) {
+        createResolvedToast(toast, "Failed to refresh timer").error();
+      }
     }
   };
 
   const fetchTasks = async () => {
-    const tasksResp = await getRecentTasks();
+    const tasksResp = await getRecentTasks(setTasks);
     setTasks(tasksResp);
   };
 
@@ -30,21 +34,20 @@ export function RecentTaskList() {
     async function fetch() {
       const toast = await showToast(ToastStyle.Animated, "Fetching tasks");
       try {
-        await fetchTasks();
+        const tasksProm = fetchTasks();
+        const activeTimer = await getCurrentTimer(setActiveTimerTaskId);
+        setActiveTimerTaskId(activeTimer);
+        await tasksProm;
         setIsLoading(false);
         createResolvedToast(toast, "Tasks fetched").success();
       } catch (error) {
         const message = (error as { message: string }).message;
-        createResolvedToast(toast, message || "Failed to fetch projects").error();
+        createResolvedToast(toast, message || "Failed to fetch tasks").error();
         setIsLoading(false);
       }
     }
     fetch();
   }, []);
-
-  useEffect(() => {
-    refreshActiveTimer();
-  }, [activeTimerTaskId]);
 
   const renderTasks = () => {
     if (tasks[0]) {
