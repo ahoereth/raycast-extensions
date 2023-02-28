@@ -64,7 +64,7 @@ export const getRecentTasks = async (callback?: (tasks: Task[]) => void, userId 
 };
 
 export const getProjects = async (callback?: (projects: Project[]) => void, query?: string): Promise<Project[]> => {
-  const response = fetch(`https://api.everhour.com/projects?limit=10&query=${query || ""}`, {
+  const response = fetch(`https://api.everhour.com/projects?limit=1000&query=${query || ""}`, {
     headers,
   });
 
