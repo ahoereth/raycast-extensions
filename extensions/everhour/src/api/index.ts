@@ -92,7 +92,7 @@ export const getProjects = async (callback?: (projects: Project[]) => void, quer
   return projects;
 };
 
-export const getTasks = async (projectId: string): Promise<Task[]> => {
+export const getProjectTasks = async (projectId: string): Promise<Task[]> => {
   const response = await fetch(
     `https://api.everhour.com/projects/${projectId}/tasks?page=1&limit=250&excludeClosed=true&query=`,
     {

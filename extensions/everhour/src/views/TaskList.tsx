@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { List, Icon, showToast, ToastStyle } from "@raycast/api";
 import { TaskListItem } from "../components";
-import { getCurrentTimer, getTasks } from "../api";
+import { getCurrentTimer, getProjectTasks } from "../api";
 import { createResolvedToast } from "../utils";
 import { Task } from "../types";
 
@@ -34,7 +34,7 @@ export function TaskList({
   };
 
   const fetchTasks = async () => {
-    const tasksResp = await getTasks(projectId);
+    const tasksResp = await getProjectTasks(projectId);
 
     setTasks(tasksResp);
   };
