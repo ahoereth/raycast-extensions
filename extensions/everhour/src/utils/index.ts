@@ -1,4 +1,5 @@
 import { ToastStyle, Toast } from "@raycast/api";
+import { Task } from "../types";
 
 export const createResolvedToast = (
   toast: Toast,
@@ -18,7 +19,7 @@ export const createResolvedToast = (
   return { error, success };
 };
 
-export const filterTasks = (records: Array<Task>, projectId: string | string[]) => {
+export const filterTasks = (records: Task[], projectId: string | string[]) => {
   if (!Array.isArray(projectId)) {
     projectId = [projectId];
   }

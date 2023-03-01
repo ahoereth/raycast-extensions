@@ -1,5 +1,5 @@
 export type User = {
-  id: string;
+  id: number;
   name: string;
   headline: string;
   avatarUrl: string;
@@ -38,15 +38,15 @@ export type TimeRecordResp = {
 
 export type TaskTimerResp = {
   status: string;
-  task: { name: string };
+  task: TaskResp;
 };
 
 export type TaskStopTimerResp = {
   status: string;
-  taskTime: { task: { name: string } };
+  taskTime: { task: TaskResp };
 };
 
 export type CurrentTimerResp = {
   status: string;
-  task: { id: string };
+  task: TaskResp;
 };

@@ -25,14 +25,17 @@ const daysAgo = (days: number) => {
   return d;
 };
 
-const taskFromTaskResp = (task: TaskResp, userId?: string, recentTime = 0) => ({
-  id: task.id,
-  name: task.name,
-  number: task.number,
-  url: task.url,
-  projects: task.projects,
-  time: { total: task.time?.total || 0, user: task.time?.users[userId] || 0, recent: recentTime },
-});
+const taskFromTaskResp = (task: TaskResp, userId?: number, recentTime = 0) => {
+  const userTime = userId ? task.time?.users[userId] : 0;
+  return {
+    id: task.id,
+    name: task.name,
+    number: task.number,
+    url: task.url,
+    projects: task.projects,
+    time: { total: task.time?.total || 0, user: userTime || 0, recent: recentTime },
+  };
+};
 
 export const getCurrentUser = async (): Promise<User> => {
   const response = await fetch("https://api.everhour.com/users/me", {
@@ -42,9 +45,12 @@ export const getCurrentUser = async (): Promise<User> => {
   return (await response.json()) as User;
 };
 
-export const getRecentTasks = async (callback?: (tasks: Task[]) => void, userId = "me"): Promise<Task[]> => {
+export const getRecentTasks = async (
+  callback?: (tasks: Task[]) => void,
+  user: string | number = "me"
+): Promise<Task[]> => {
   const [currentDate] = daysAgo(7).toISOString().split("T");
-  const response = fetch(`https://api.everhour.com/users/${userId}/time?limit=1000&from=${currentDate}`, {
+  const response = fetch(`https://api.everhour.com/users/${user}/time?limit=1000&from=${currentDate}`, {
     headers,
   });
 
@@ -61,15 +67,13 @@ export const getRecentTasks = async (callback?: (tasks: Task[]) => void, userId 
     throw new Error("No recent tasks.");
   }
 
-  if (userId === "me") {
-    userId = timeRecords[0].user;
-  }
+  const userId = timeRecords[0].user;
 
-  const aggregatedTasks = timeRecords.reduce((agg: { [key: string]: Task }, { time, task: { id } }: TimeRecordResp) => {
-    if (!agg[id]) {
-      agg[id] = taskFromTaskResp(task, userId, time);
+  const aggregatedTasks = timeRecords.reduce((agg: { [key: string]: Task }, { time, task }: TimeRecordResp) => {
+    if (!agg[task.id]) {
+      agg[task.id] = taskFromTaskResp(task, userId, time);
     } else {
-      agg[id].time.recent += time;
+      agg[task.id].time.recent += time;
     }
     return agg;
   }, {});
@@ -113,7 +117,7 @@ export const getProjectTasks = async (
   projectId: string,
   limit = 20,
   query?: string,
-  userId?: string
+  userId?: number
 ): Promise<Task[]> => {
   const url = query
     ? `https://api.everhour.com/projects/${projectId}/tasks/search?page=1&limit=${limit}&searchInClosed=false&query=recurrent`
@@ -125,10 +129,10 @@ export const getProjectTasks = async (
     throw new Error(tasks.message);
   }
 
-  return tasks.map((task) => taskFromTaskResp(task, userId));
+  return tasks.map((task: TaskResp) => taskFromTaskResp(task, userId));
 };
 
-export const searchTasks = async (query: string, userId?: string, limit = 20): Promise<Task[]> => {
+export const searchTasks = async (query: string, userId?: number, limit = 20): Promise<Task[]> => {
   const response = await fetch(
     `https://api.everhour.com/tasks/search?page=1&limit=${limit}&searchInClosed=false&query=${query}`,
     { headers }
@@ -139,10 +143,10 @@ export const searchTasks = async (query: string, userId?: string, limit = 20): P
     throw new Error(tasks.message);
   }
 
-  return tasks.map((task) => taskFromTaskResp(task, userId));
+  return tasks.map((task: TaskResp) => taskFromTaskResp(task, userId));
 };
 
-export const getCurrentTask = async (callback?: (taskId: string) => void): Promise<Task | null> => {
+export const getCurrentTask = async (callback?: (task: Task) => void): Promise<Task | null> => {
   const response = fetch("https://api.everhour.com/timers/current", {
     headers,
   });
@@ -196,7 +200,7 @@ export const stopCurrentTaskTimer = async (): Promise<{ status: string; taskName
   };
 };
 
-export const submitTaskHours = async (taskId: string, date: Date, seconds: number): Promise<{ taskName: string }> => {
+export const submitTaskHours = async (taskId: string, date: Date, seconds: number): Promise<Task> => {
   const response = await fetch(`https://api.everhour.com/tasks/${taskId}/time`, {
     method: "POST",
     headers,
