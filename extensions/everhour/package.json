@@ -30,7 +30,7 @@
         {
           "name": "projectQuery",
           "type": "text",
-          "placeholder": "Project",
+          "placeholder": "Query Projects",
           "required": false
         }
       ]
@@ -48,6 +48,7 @@
   ],
   "dependencies": {
     "@raycast/api": "^1.25.0",
+    "@raycast/utils": "^1.5.0",
     "node-fetch": "^3.0.0"
   },
   "devDependencies": {

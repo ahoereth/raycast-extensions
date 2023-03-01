@@ -17,3 +17,21 @@ export const createResolvedToast = (
 
   return { error, success };
 };
+
+export const filterTasks = (records: Array<Task>, projectId: string | string[]) => {
+  if (!Array.isArray(projectId)) {
+    projectId = [projectId];
+  }
+  return records.filter((record: Task) => -1 !== projectId.indexOf(record.projects[0]));
+};
+
+export const formatSeconds = (seconds: number): string => {
+  const minutes = Math.floor(seconds / 60);
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const min = minutes % 60;
+    return `${hours}h ${min}m`;
+  }
+  return `${minutes}m`;
+};
+

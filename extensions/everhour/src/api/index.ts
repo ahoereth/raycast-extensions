@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fetch from "node-fetch";
 import { LocalStorage, preferences } from "@raycast/api";
-import { Project, Task, TaskTimerResp, TaskStopTimerResp, TaskResp, CurrentTimerResp, TimeRecordResp } from "../types";
+import { User, Project, Task, TaskTimerResp, TaskStopTimerResp, TaskResp, CurrentTimerResp, TimeRecordResp } from "../types";
 
 const API_KEY = preferences.token.value as string;
 
@@ -16,12 +16,21 @@ const daysAgo = (days: number) => {
   return d;
 };
 
-export const getCurrentUser = async () => {
+const taskFromTaskResp = (task: TaskResp, userId?:string, recentTime = 0) => ({
+  id: task.id,
+  name: task.name,
+  number: task.number,
+  url: task.url,
+  projects: task.projects,
+  time: { total: task.time?.total || 0, user: task.time?.users[userId] || 0, recent: recentTime },
+});
+
+export const getCurrentUser = async (): Promise<User> => {
   const response = await fetch("https://api.everhour.com/users/me", {
     headers,
   });
 
-  return (await response.json()) as any;
+  return (await response.json()) as User;
 };
 
 export const getRecentTasks = async (callback?: (tasks: Task[]) => void, userId = "me"): Promise<Task[]> => {
@@ -39,19 +48,17 @@ export const getRecentTasks = async (callback?: (tasks: Task[]) => void, userId 
 
   const timeRecords = (await (await response).json()) as TimeRecordResp[];
 
-  if ("code" in timeRecords || timeRecords.length == 0) {
+  if ("code" in timeRecords || timeRecords.length === 0) {
     throw new Error("No recent tasks.");
   }
 
+  if (userId === "me") {
+    userId = timeRecords[0].user;
+  }
   const tasks = Object.values(
     timeRecords.reduce((agg: { [key: string]: Task }, { time, task }: TimeRecordResp) => {
       if (agg[task.id] === undefined) {
-        agg[task.id] = {
-          id: task.id,
-          name: task.name,
-          projects: task.projects,
-          time: { total: task.time.total || 0, recent: time },
-        };
+        agg[task.id] = taskFromTaskResp(task, userId, time);
       } else {
         agg[task.id].time.recent += time;
       }
@@ -92,12 +99,24 @@ export const getProjects = async (callback?: (projects: Project[]) => void, quer
   return projects;
 };
 
-export const getProjectTasks = async (projectId: string): Promise<Task[]> => {
+export const getProjectTasks = async (projectId: string, limit = 20, query?: string, userId?: string): Promise<Task[]> => {
+  const url = query
+    ? `https://api.everhour.com/projects/${projectId}/tasks/search?page=1&limit=${limit}&searchInClosed=false&query=recurrent`
+    : `https://api.everhour.com/projects/${projectId}/tasks?page=1&limit=${limit}&excludeClosed=true&query=`;
+  const response = await fetch(url, { headers });
+  const tasks = (await response.json()) as any;
+
+  if (tasks.code) {
+    throw new Error(tasks.message);
+  }
+
+  return tasks.map((task) => taskFromTaskResp(task, userId));
+};
+
+export const searchTasks = async (query: string, userId?: string, limit = 20): Promise<Task[]> => {
   const response = await fetch(
-    `https://api.everhour.com/projects/${projectId}/tasks?page=1&limit=250&excludeClosed=true&query=`,
-    {
-      headers,
-    }
+    `https://api.everhour.com/tasks/search?page=1&limit=${limit}&searchInClosed=false&query=${query}`,
+    { headers }
   );
   const tasks = (await response.json()) as any;
 
@@ -105,7 +124,7 @@ export const getProjectTasks = async (projectId: string): Promise<Task[]> => {
     throw new Error(tasks.message);
   }
 
-  return tasks.map(({ id, name }: TaskResp) => ({ id, name }));
+  return tasks.map((task) => taskFromTaskResp(task, userId));
 };
 
 export const getCurrentTimer = async (callback?: (taskId: string) => void): Promise<string | null> => {
@@ -162,20 +181,16 @@ export const stopCurrentTaskTimer = async (): Promise<{ status: string; taskName
   };
 };
 
-export const submitTaskHours = async (taskId: string, hours: string): Promise<{ taskName: string }> => {
-  const seconds = parseFloat(hours) * 60 * 60;
-
+export const submitTaskHours = async (taskId: string, date: Date, seconds: number): Promise<{ taskName: string }> => {
   const response = await fetch(`https://api.everhour.com/tasks/${taskId}/time`, {
     method: "POST",
     headers,
     body: JSON.stringify({
       time: seconds,
-      date: new Date().toISOString().split("T")[0],
+      date: date.toISOString().split("T")[0],
     }),
   });
   const respJson = (await response.json()) as TaskTimerResp;
-
-  return {
-    taskName: respJson.task?.name,
-  };
+  console.log(respJson);
+  return taskFromTaskResp(respJson.task);
 };

@@ -2,12 +2,8 @@ import { useState, useEffect } from "react";
 import { List, Icon, showToast, ToastStyle } from "@raycast/api";
 import { TaskListItem } from "../components";
 import { getCurrentTimer, getProjectTasks } from "../api";
-import { createResolvedToast } from "../utils";
+import { createResolvedToast, filterTasks } from "../utils";
 import { Task } from "../types";
-
-const filterTasks = (records: Array<Task>, projectId: string) => {
-  return records.filter((record: Task) => record.projects[0] === projectId);
-};
 
 export function TaskList({
   projectId,
@@ -15,7 +11,7 @@ export function TaskList({
   refreshRecords,
 }: {
   projectId: string;
-  timeRecords: Array<Task>;
+  timeRecords?: Array<Task>;
   refreshRecords: () => Promise<Array<Task>>;
 }) {
   const [activeTimerTaskId, setActiveTimerTaskId] = useState<null | string>(null);
@@ -59,7 +55,7 @@ export function TaskList({
     refreshActiveTimer();
   }, [activeTimerTaskId]);
 
-  const recentTimeRecords = filterTasks(timeRecords, projectId);
+  const recentTimeRecords = timeRecords ? filterTasks(timeRecords, projectId) : [];
 
   const renderTasks = () => {
     if (tasks[0]) {

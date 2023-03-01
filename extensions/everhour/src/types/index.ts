@@ -1,3 +1,10 @@
+export type User = {
+  id: string;
+  name: string;
+  headline: string;
+  avatarUrl: string;
+};
+
 export type Project = {
   id: string;
   name: string;
@@ -6,14 +13,18 @@ export type Project = {
 export type Task = {
   id: string;
   name: string;
-  time: { total: number; recent: number };
+  number: string;
+  url: string;
+  time: { total: number; user: number; recent: number };
   projects: Array<string>;
 };
 
 export type TaskResp = {
   id: string;
   name: string;
-  time: { total: number };
+  number: string;
+  url: string;
+  time: { total: number; users: {[key: string]: number} };
   projects: Array<string>;
 };
 
