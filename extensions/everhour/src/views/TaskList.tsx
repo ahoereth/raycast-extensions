@@ -69,7 +69,7 @@ export function TaskList({
           }}
           refreshActiveTask={refreshActiveTask}
           task={task}
-          hasActiveTimer={task.id === activeTimerTaskId}
+          hasActiveTimer={task.id === activeTask?.id}
         />
       ));
     }

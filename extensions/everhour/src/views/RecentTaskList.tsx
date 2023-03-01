@@ -3,7 +3,7 @@ import { List, Icon, showToast, ToastStyle, LaunchProps } from "@raycast/api";
 import { useCachedState } from "@raycast/utils";
 import { TaskListItem } from "../components";
 import { getRecentTasks, getCurrentUser, getCurrentTask, getProjects, getProjectTasks, searchTasks } from "../api";
-import { Task, Project } from "../types";
+import { User, Task, Project } from "../types";
 import { createResolvedToast, filterTasks } from "../utils";
 
 interface TaskListArguments {
@@ -30,7 +30,11 @@ function ProjectDropdown(props: {
   );
 }
 
-const joinTasks = (a: Task[], b: Task[]) => {
+const joinTasks = (a: Task[], b: null | Task | Task[]) => {
+  if (!b) return a;
+  if (!Array.isArray(b)) {
+    b = [b];
+  }
   const ids = a.map(({ id }) => id);
   return b.reduce(
     (agg, task) => {
@@ -43,7 +47,7 @@ const joinTasks = (a: Task[], b: Task[]) => {
   );
 };
 
-const addStickyTasks = (tasks: Task[], sticky, project?) => {
+const addStickyTasks = (tasks: Task[], sticky: Task[], project?: string | string[]) => {
   const stickyTasks = project ? [...filterTasks(sticky, project)] : sticky;
   return joinTasks(tasks, sticky);
 };
@@ -51,7 +55,7 @@ const addStickyTasks = (tasks: Task[], sticky, project?) => {
 export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments }>) {
   const { projectQuery } = props.arguments;
 
-  const [user, setUser] = useCachedState<User>("user", {});
+  const [user, setUser] = useCachedState<User | null>("user", null);
   const [activeTask, setActiveTask] = useCachedState<Task | null>("activeTask", null);
   const [recentTasks, setRecentTasks] = useCachedState<Task[]>("recentTasks", []);
   const [timeRecords, setTimeRecords] = useCachedState<{ [key: string]: number }>("timeRecords", {});
@@ -98,7 +102,7 @@ export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments
           result = await getRecentTasks();
         }
 
-        const relevant = joinTasks(recentTasks, [activeTask]);
+        const relevant = joinTasks(recentTasks, activeTask);
         const sticky = relevant.filter(({ name }) => {
           return name.toLowerCase().indexOf(query) !== -1;
         });
@@ -134,7 +138,7 @@ export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments
     const lookup = recentTasks.reduce((agg, { id, time }) => {
       agg[id] = time.recent;
       return agg;
-    }, {});
+    }, {} as { [key: string]: number });
     setTimeRecords(lookup);
     if (activeTask) {
       setTasks(addStickyTasks([activeTask], recentTasks));
