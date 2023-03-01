@@ -1,19 +1,9 @@
 import React, { useState } from "react";
-import { List, ActionPanel, PushAction, Icon, Color, showToast, ToastStyle } from "@raycast/api";
+import { List, ActionPanel, Action, PushAction, Icon, Color, showToast, ToastStyle } from "@raycast/api";
 import { TimeSubmitForm } from "../views";
 import { Task } from "../types";
 import { startTaskTimer, stopCurrentTaskTimer } from "../api";
-import { createResolvedToast } from "../utils";
-
-const formatSeconds = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  if (minutes >= 60) {
-    const hours = Math.floor(minutes / 60);
-    const min = minutes % 60;
-    return `${hours} ${hours === 1 ? "hour" : "hours"} and ${min} min`;
-  }
-  return `${minutes} min`;
-};
+import { createResolvedToast, formatSeconds } from "../utils";
 
 export function TaskListItem({
   task,
@@ -65,7 +55,16 @@ export function TaskListItem({
     if (record && record.time.recent > 0) {
       return `${formatSeconds(record.time.recent)} in the last 7 days`;
     }
+    if (recent) return `${formatSeconds(recent)} recently`;
+    if (user) return formatSeconds(user);
     return "";
+  };
+
+  const buildSubtitle = () => {
+    const time = resolveTaskTime();
+    if (task.number && time) return `${task.number}   ${time}`;
+    if (task.number) return task.number;
+    return time;
   };
 
   return (
@@ -73,7 +72,7 @@ export function TaskListItem({
       id={task.id}
       key={task.id}
       title={task.name}
-      subtitle={resolveTaskTime()}
+      subtitle={buildSubtitle()}
       icon={{ source: Icon.Dot, tintColor: hasActiveTimer ? Color.Green : Color.SecondaryText }}
       actions={
         <ActionPanel>
@@ -90,10 +89,18 @@ export function TaskListItem({
                   const records = await refreshRecords();
                   setTimeRecords(records);
                 }}
-                taskId={task.id}
+                task={task}
               />
             }
           />
+          {task.url || task.number ? (
+            <ActionPanel.Section title="Ticket">
+              {task.url ? <Action.OpenInBrowser url={task.url} /> : ""}
+              {task.number ? <Action.CopyToClipboard title="Copy ticket number" content={task.number} /> : ""}
+            </ActionPanel.Section>
+          ) : (
+            ""
+          )}
         </ActionPanel>
       }
     />
