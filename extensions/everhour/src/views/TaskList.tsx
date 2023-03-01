@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { List, Icon, showToast, ToastStyle } from "@raycast/api";
 import { TaskListItem } from "../components";
-import { getCurrentTimer, getProjectTasks } from "../api";
+import { getCurrentTask, getProjectTasks } from "../api";
 import { createResolvedToast, filterTasks } from "../utils";
 import { Task } from "../types";
 
@@ -14,15 +14,15 @@ export function TaskList({
   timeRecords?: Array<Task>;
   refreshRecords: () => Promise<Array<Task>>;
 }) {
-  const [activeTimerTaskId, setActiveTimerTaskId] = useState<null | string>(null);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Array<Task>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const refreshActiveTimer = async () => {
+  const refreshActiveTask = async () => {
     const toast = await showToast(ToastStyle.Animated, "Refreshing tasks");
     try {
-      const activeTimer = await getCurrentTimer();
-      setActiveTimerTaskId(activeTimer);
+      const activeTask = await getCurrentTask();
+      setActiveTask(activeTask);
       createResolvedToast(toast, "Tasks refreshed").success();
     } catch (error) {
       createResolvedToast(toast, "Failed to refresh tasks").error();
@@ -52,8 +52,8 @@ export function TaskList({
   }, []);
 
   useEffect(() => {
-    refreshActiveTimer();
-  }, [activeTimerTaskId]);
+    refreshActiveTask();
+  }, [activeTask]);
 
   const recentTimeRecords = timeRecords ? filterTasks(timeRecords, projectId) : [];
 
@@ -67,7 +67,7 @@ export function TaskList({
             fetchTasks();
             return refreshRecords();
           }}
-          refreshActiveTimer={refreshActiveTimer}
+          refreshActiveTask={refreshActiveTask}
           task={task}
           hasActiveTimer={task.id === activeTimerTaskId}
         />

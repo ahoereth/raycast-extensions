@@ -127,27 +127,27 @@ export const searchTasks = async (query: string, userId?: string, limit = 20): P
   return tasks.map((task) => taskFromTaskResp(task, userId));
 };
 
-export const getCurrentTimer = async (callback?: (taskId: string) => void): Promise<string | null> => {
+export const getCurrentTask = async (callback?: (taskId: string) => void): Promise<Task | null> => {
   const response = fetch("https://api.everhour.com/timers/current", {
     headers,
   });
 
   if (callback) {
-    const fromStorage = await LocalStorage.getItem<string>("currentTimer");
+    const fromStorage = await LocalStorage.getItem<string>("currentTask");
     if (fromStorage && fromStorage.length > 0) {
-      callback(fromStorage);
+      callback(JSON.parse(fromStorage));
     }
   }
 
   const currentTimer = (await (await response).json()) as CurrentTimerResp;
 
   if (currentTimer.status === "stopped") {
-    await LocalStorage.removeItem("currentTimer");
+    await LocalStorage.removeItem("currentTask");
     return null;
   }
 
-  await LocalStorage.setItem("currentTimer", currentTimer.task.id);
-  return currentTimer.task.id;
+  await LocalStorage.setItem("currentTask", JSON.stringify(currentTimer.task));
+  return taskFromTaskResp(currentTimer.task);
 };
 
 export const startTaskTimer = async (taskId: string): Promise<{ status: string; taskName: string }> => {
@@ -191,6 +191,5 @@ export const submitTaskHours = async (taskId: string, date: Date, seconds: numbe
     }),
   });
   const respJson = (await response.json()) as TaskTimerResp;
-  console.log(respJson);
   return taskFromTaskResp(respJson.task);
 };

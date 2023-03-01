@@ -8,20 +8,20 @@ import { createResolvedToast, formatSeconds } from "../utils";
 export function TaskListItem({
   task,
   hasActiveTimer,
-  refreshActiveTimer,
+  refreshActiveTask,
   refreshRecords,
   recentTimeRecords,
 }: {
   task: Task;
   hasActiveTimer: boolean;
-  refreshActiveTimer: (id?: string | null) => Promise<void>;
+  refreshActiveTask: (task?: Task | null) => Promise<void>;
   refreshRecords: () => Promise<Array<Task>>;
   recentTimeRecords?: Array<Task>;
 }) {
   const [timeRecords, setTimeRecords] = useState<Array<Task>>(recentTimeRecords);
 
   const enableTaskTimer = async () => {
-    refreshActiveTimer(task.id);
+    refreshActiveTask(task);
     const toast = await showToast(ToastStyle.Animated, "Starting timer");
     try {
       const { taskName } = await startTaskTimer(task.id);
@@ -31,11 +31,11 @@ export function TaskListItem({
     }
   };
   const disableActiveTimer = async () => {
-    refreshActiveTimer("");
+    refreshActiveTask();
     const toast = await showToast(ToastStyle.Animated, "Stopping timer");
     try {
       const { taskName } = await stopCurrentTaskTimer();
-      refreshActiveTimer();
+      refreshActiveTask();
 
       if (taskName) {
         createResolvedToast(toast, "Timer stopped for " + taskName).success();
