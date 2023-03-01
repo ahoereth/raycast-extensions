@@ -10,7 +10,7 @@ export function TaskListItem({
   hasActiveTimer,
   refreshActiveTask,
   refreshRecords,
-  recentTimeRecords,
+  recentTimeRecords = [],
 }: {
   task: Task;
   hasActiveTimer: boolean;

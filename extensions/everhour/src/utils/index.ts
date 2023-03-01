@@ -34,4 +34,3 @@ export const formatSeconds = (seconds: number): string => {
   }
   return `${minutes}m`;
 };
-

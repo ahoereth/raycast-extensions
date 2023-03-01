@@ -24,7 +24,7 @@ export type TaskResp = {
   name: string;
   number: string;
   url: string;
-  time: { total: number; users: {[key: string]: number} };
+  time: { total: number; users: { [key: string]: number } };
   projects: Array<string>;
 };
 

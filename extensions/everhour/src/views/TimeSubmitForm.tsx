@@ -43,11 +43,11 @@ export function TimeSubmitForm({ task, refreshRecords }: { task: Task; refreshRe
     }
   };
 
-          // {hasActiveTimer ? (
-          //   <ActionPanel.Item title="Stop Active Timer" onAction={disableActiveTimer} />
-          // ) : (
-          //   <ActionPanel.Item title="Start Timer" onAction={enableTaskTimer} />
-          // )}
+  // {hasActiveTimer ? (
+  //   <ActionPanel.Item title="Stop Active Timer" onAction={disableActiveTimer} />
+  // ) : (
+  //   <ActionPanel.Item title="Start Timer" onAction={enableTaskTimer} />
+  // )}
   return (
     <Form
       navigationTitle={name}

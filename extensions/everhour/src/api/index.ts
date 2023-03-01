@@ -1,7 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fetch from "node-fetch";
 import { LocalStorage, preferences } from "@raycast/api";
-import { User, Project, Task, TaskTimerResp, TaskStopTimerResp, TaskResp, CurrentTimerResp, TimeRecordResp } from "../types";
+import {
+  User,
+  Project,
+  Task,
+  TaskTimerResp,
+  TaskStopTimerResp,
+  TaskResp,
+  CurrentTimerResp,
+  TimeRecordResp,
+} from "../types";
 
 const API_KEY = preferences.token.value as string;
 
@@ -16,7 +25,7 @@ const daysAgo = (days: number) => {
   return d;
 };
 
-const taskFromTaskResp = (task: TaskResp, userId?:string, recentTime = 0) => ({
+const taskFromTaskResp = (task: TaskResp, userId?: string, recentTime = 0) => ({
   id: task.id,
   name: task.name,
   number: task.number,
@@ -55,19 +64,20 @@ export const getRecentTasks = async (callback?: (tasks: Task[]) => void, userId 
   if (userId === "me") {
     userId = timeRecords[0].user;
   }
-  const tasks = Object.values(
-    timeRecords.reduce((agg: { [key: string]: Task }, { time, task }: TimeRecordResp) => {
-      if (agg[task.id] === undefined) {
-        agg[task.id] = taskFromTaskResp(task, userId, time);
-      } else {
-        agg[task.id].time.recent += time;
-      }
-      return agg;
-    }, {})
-  );
 
-  LocalStorage.setItem("recentTasks", JSON.stringify(tasks));
-  return tasks;
+  const aggregatedTasks = timeRecords.reduce((agg: { [key: string]: Task }, { time, task: { id } }: TimeRecordResp) => {
+    if (!agg[id]) {
+      agg[id] = taskFromTaskResp(task, userId, time);
+    } else {
+      agg[id].time.recent += time;
+    }
+    return agg;
+  }, {});
+
+  const aggregatedTaskList = Object.values(aggregatedTasks);
+
+  LocalStorage.setItem("recentTasks", JSON.stringify(aggregatedTaskList));
+  return aggregatedTaskList;
 };
 
 export const getProjects = async (callback?: (projects: Project[]) => void, query?: string): Promise<Project[]> => {
@@ -99,7 +109,12 @@ export const getProjects = async (callback?: (projects: Project[]) => void, quer
   return projects;
 };
 
-export const getProjectTasks = async (projectId: string, limit = 20, query?: string, userId?: string): Promise<Task[]> => {
+export const getProjectTasks = async (
+  projectId: string,
+  limit = 20,
+  query?: string,
+  userId?: string
+): Promise<Task[]> => {
   const url = query
     ? `https://api.everhour.com/projects/${projectId}/tasks/search?page=1&limit=${limit}&searchInClosed=false&query=recurrent`
     : `https://api.everhour.com/projects/${projectId}/tasks?page=1&limit=${limit}&excludeClosed=true&query=`;
