@@ -1,3 +1,10 @@
+export type User = {
+  id: number;
+  name: string;
+  headline: string;
+  avatarUrl: string;
+};
+
 export type Project = {
   id: string;
   name: string;
@@ -6,14 +13,18 @@ export type Project = {
 export type Task = {
   id: string;
   name: string;
-  time: { total: number; recent: number };
+  number: string;
+  url: string;
+  time: { total: number; user: number; recent: number };
   projects: Array<string>;
 };
 
 export type TaskResp = {
   id: string;
   name: string;
-  time: { total: number };
+  number: string;
+  url: string;
+  time: { total: number; users: { [key: string]: number } };
   projects: Array<string>;
 };
 
@@ -27,15 +38,15 @@ export type TimeRecordResp = {
 
 export type TaskTimerResp = {
   status: string;
-  task: { name: string };
+  task: TaskResp;
 };
 
 export type TaskStopTimerResp = {
   status: string;
-  taskTime: { task: { name: string } };
+  taskTime: { task: TaskResp };
 };
 
 export type CurrentTimerResp = {
   status: string;
-  task: { id: string };
+  task: TaskResp;
 };

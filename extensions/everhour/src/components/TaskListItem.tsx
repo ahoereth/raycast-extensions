@@ -1,50 +1,41 @@
 import React, { useState } from "react";
-import { List, ActionPanel, PushAction, Icon, Color, showToast, ToastStyle } from "@raycast/api";
+import { List, ActionPanel, Action, PushAction, Icon, Color, showToast, ToastStyle } from "@raycast/api";
 import { TimeSubmitForm } from "../views";
 import { Task } from "../types";
 import { startTaskTimer, stopCurrentTaskTimer } from "../api";
-import { createResolvedToast } from "../utils";
-
-const formatSeconds = (seconds: number): string => {
-  const minutes = Math.floor(seconds / 60);
-  if (minutes >= 60) {
-    const hours = Math.floor(minutes / 60);
-    const min = minutes % 60;
-    return `${hours} ${hours === 1 ? "hour" : "hours"} and ${min} min`;
-  }
-  return `${minutes} min`;
-};
+import { createResolvedToast, formatSeconds } from "../utils";
 
 export function TaskListItem({
   task,
   hasActiveTimer,
-  refreshActiveTimer,
+  refreshActiveTask,
   refreshRecords,
   recentTimeRecords = [],
 }: {
   task: Task;
   hasActiveTimer: boolean;
-  refreshActiveTimer: () => Promise<void>;
+  refreshActiveTask: (task?: Task | null) => Promise<void>;
   refreshRecords: () => Promise<Array<Task>>;
   recentTimeRecords?: Array<Task>;
 }) {
   const [timeRecords, setTimeRecords] = useState<Array<Task>>(recentTimeRecords);
 
   const enableTaskTimer = async () => {
+    refreshActiveTask(task);
     const toast = await showToast(ToastStyle.Animated, "Starting timer");
     try {
       const { taskName } = await startTaskTimer(task.id);
-      refreshActiveTimer();
       createResolvedToast(toast, "Timer started for " + taskName).success();
     } catch (error) {
       createResolvedToast(toast, "Error starting timer").error();
     }
   };
   const disableActiveTimer = async () => {
+    refreshActiveTask();
     const toast = await showToast(ToastStyle.Animated, "Stopping timer");
     try {
       const { taskName } = await stopCurrentTaskTimer();
-      refreshActiveTimer();
+      refreshActiveTask();
 
       if (taskName) {
         createResolvedToast(toast, "Timer stopped for " + taskName).success();
@@ -57,14 +48,27 @@ export function TaskListItem({
   };
 
   const resolveTaskTime = (): string => {
-    if (task.time?.recent > 0) {
-      return `${formatSeconds(task.time.recent)} in the last 7 days`;
+    const record = timeRecords?.find((timeRecord) => timeRecord.id === task.id);
+    let user = 0;
+    let recent = 0;
+    if (record && record.time.user > 0) {
+      user = record.time.user;
+      recent = record.time.recent || 0;
     }
-    const record = timeRecords.find((timeRecord) => timeRecord.id === task.id);
-    if (record && record.time.recent > 0) {
-      return `${formatSeconds(record.time.recent)} in the last 7 days`;
+    if (task.time.user > 0) {
+      user = task.time.user || 0;
+      recent = task.time.recent;
     }
+    if (recent) return `${formatSeconds(recent)} recently`;
+    if (user) return formatSeconds(user);
     return "";
+  };
+
+  const buildSubtitle = () => {
+    const time = resolveTaskTime();
+    if (task.number && time) return `${task.number}   ${time}`;
+    if (task.number) return task.number;
+    return time;
   };
 
   return (
@@ -72,7 +76,7 @@ export function TaskListItem({
       id={task.id}
       key={task.id}
       title={task.name}
-      subtitle={resolveTaskTime()}
+      subtitle={buildSubtitle()}
       icon={{ source: Icon.Dot, tintColor: hasActiveTimer ? Color.Green : Color.SecondaryText }}
       actions={
         <ActionPanel>
@@ -89,10 +93,18 @@ export function TaskListItem({
                   const records = await refreshRecords();
                   setTimeRecords(records);
                 }}
-                taskId={task.id}
+                task={task}
               />
             }
           />
+          {task.url || task.number ? (
+            <ActionPanel.Section title="Ticket">
+              {task.url ? <Action.OpenInBrowser url={task.url} /> : ""}
+              {task.number ? <Action.CopyToClipboard title="Copy ticket number" content={task.number} /> : ""}
+            </ActionPanel.Section>
+          ) : (
+            ""
+          )}
         </ActionPanel>
       }
     />

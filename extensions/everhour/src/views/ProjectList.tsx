@@ -9,30 +9,56 @@ export function ProjectList() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [timeRecords, setTimeRecords] = useState<Array<Task>>([]);
+  const [query, setQuery] = useState<string>("");
 
   useEffect(() => {
-    async function fetch() {
-      const toast = await showToast(ToastStyle.Animated, "Fetching Projects");
-      try {
-        const projectsResp = await getProjects();
-        const records = await getRecentTasks();
-
-        setTimeRecords(records);
+    async function fetch(query: string) {
+      setIsLoading(true);
+      const toast = await showToast(ToastStyle.Animated, "Querying projects");
+      const projectsResp = await getProjects(() => {
+        /*noop*/
+      }, query);
+      if (projectsResp.length > 0) {
         setProjects(projectsResp);
-        setIsLoading(false);
+      }
+      createResolvedToast(toast, "Projects queried").success();
+      setIsLoading(false);
+    }
+    if (query) {
+      const timer = setTimeout(() => fetch(query), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [query]);
 
-        createResolvedToast(toast, "Projects Fetched").success();
+  useEffect(() => {
+    let cancel = false;
+    const fetch = async () => {
+      const toast = await showToast(ToastStyle.Animated, "Fetching projects");
+      try {
+        const projectsResp = await getProjects(setProjects);
+        const records = await getRecentTasks(setTimeRecords);
+        setTimeRecords(records);
+
+        if (!cancel) {
+          setProjects(projectsResp);
+          setIsLoading(false);
+        }
+        createResolvedToast(toast, "Projects fetched").success();
+        return projectsResp;
       } catch (error) {
         const message = (error as { message: string }).message || "";
         createResolvedToast(toast, "Failed to fetch projects", message).error();
         setIsLoading(false);
       }
-    }
-    fetch();
-  }, []);
+    };
+    if (query === "") fetch();
+    return () => {
+      cancel = true;
+    };
+  }, [query]);
 
   const renderProjects = () => {
-    if (!isLoading && projects[0]) {
+    if (projects[0]) {
       return projects.map((project) => (
         <ProjectListItem timeRecords={timeRecords} refreshRecords={getRecentTasks} key={project.id} project={project} />
       ));
@@ -44,7 +70,12 @@ export function ProjectList() {
   };
 
   return (
-    <List isLoading={isLoading} searchBarPlaceholder="Filter projects by name...">
+    <List
+      isLoading={isLoading}
+      filtering={true}
+      onSearchTextChange={setQuery}
+      searchBarPlaceholder="Filter projects by name..."
+    >
       {renderProjects()}
     </List>
   );
