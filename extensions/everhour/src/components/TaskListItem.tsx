@@ -89,11 +89,11 @@ export function TaskListItem({
             title="Submit Custom Time"
             target={
               <TimeSubmitForm
+                taskId={task.id}
                 refreshRecords={async () => {
                   const records = await refreshRecords();
                   setTimeRecords(records);
                 }}
-                task={task}
               />
             }
           />

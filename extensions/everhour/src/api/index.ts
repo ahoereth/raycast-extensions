@@ -41,8 +41,8 @@ export const getCurrentUser = async (): Promise<User> => {
   const response = await fetch("https://api.everhour.com/users/me", {
     headers,
   });
-
-  return (await response.json()) as User;
+  const { id, name, headline, avatarUrl} = (await response.json());
+  return { id, name, headline, avatarUrl };
 };
 
 export const getRecentTasks = async (
@@ -64,7 +64,8 @@ export const getRecentTasks = async (
   const timeRecords = (await (await response).json()) as TimeRecordResp[];
 
   if ("code" in timeRecords || timeRecords.length === 0) {
-    throw new Error("No recent tasks.");
+    // throw new Error("No recent tasks.");
+    return [];
   }
 
   const userId = timeRecords[0].user;
@@ -120,7 +121,7 @@ export const getProjectTasks = async (
   userId?: number
 ): Promise<Task[]> => {
   const url = query
-    ? `https://api.everhour.com/projects/${projectId}/tasks/search?page=1&limit=${limit}&searchInClosed=false&query=recurrent`
+    ? `https://api.everhour.com/projects/${projectId}/tasks/search?page=1&limit=${limit}&searchInClosed=false&query=${query}`
     : `https://api.everhour.com/projects/${projectId}/tasks?page=1&limit=${limit}&excludeClosed=true&query=`;
   const response = await fetch(url, { headers });
   const tasks = (await response.json()) as any;
@@ -200,15 +201,20 @@ export const stopCurrentTaskTimer = async (): Promise<{ status: string; taskName
   };
 };
 
-export const submitTaskHours = async (taskId: string, date: Date, seconds: number): Promise<Task> => {
+export const submitTaskHours = async (taskId: string, hours: string): Promise<{ taskName: string }> => {
+  const seconds = parseFloat(hours) * 60 * 60;
+
   const response = await fetch(`https://api.everhour.com/tasks/${taskId}/time`, {
     method: "POST",
     headers,
     body: JSON.stringify({
       time: seconds,
-      date: date.toISOString().split("T")[0],
+      date: new Date().toISOString().split("T")[0],
     }),
   });
   const respJson = (await response.json()) as TaskTimerResp;
-  return taskFromTaskResp(respJson.task);
+
+  return {
+    taskName: respJson.task?.name,
+  };
 };

@@ -83,17 +83,11 @@ export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments
 
   useEffect(() => {
     let cancel = false;
-    let lastProjects: number[] = [];
-    async function fetch(query: string) {
+    const fetch = async (query: string) => {
       setIsLoading(true);
       const toast = await showToast(ToastStyle.Animated, "Fetching tasks");
       try {
-        if (projects.length === lastProjects.length && projects.every(({ id }) => -1 !== lastProjects.indexOf(id))) {
-          return;
-        }
-        // TODO: This is triggered twice for some reason.
-        console.log("collect", projectQuery, query, project, user.id, projects.length);
-        lastProjects = projects.map(({id}) => id);
+    console.log("collect", `'${projectQuery}'`, `'${query}'`, project, user?.id, projects.length);
         let result: Task[] = [];
         if (user && projectQuery && project === "_all" && projects.length) {
           const results = await Promise.all(
@@ -118,7 +112,7 @@ export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments
           }
         }
         if (!cancel) {
-          setTasks(addStickyTasks(result, sticky));
+          setTasks(addStickyTasks(result, sticky, project));
         }
 
         createResolvedToast(toast, "Tasks fetched").success();
@@ -128,7 +122,9 @@ export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments
         createResolvedToast(toast, message || "Failed to fetch tasks").error();
         setIsLoading(false);
       }
-    }
+    };
+
+
     const timeout = setTimeout(() => {
       fetch(query);
     }, 200);
@@ -136,7 +132,7 @@ export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments
       cancel = true;
       clearTimeout(timeout);
     };
-  }, [query, project, projects, user]);
+  }, [query, project, user]);
 
   useEffect(() => {
     const lookup = recentTasks.reduce((agg, { id, time }) => {
@@ -157,8 +153,8 @@ export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments
       const projectsProm = getProjects(setProjects, projectQuery);
       const userProm = getCurrentUser();
       const activeProm = getCurrentTask(setActiveTask);
-      setRecentTasks(await tasksProm);
       setProjects(await projectsProm);
+      setRecentTasks(await tasksProm);
       setUser(await userProm);
       setActiveTask(await activeProm);
     };
