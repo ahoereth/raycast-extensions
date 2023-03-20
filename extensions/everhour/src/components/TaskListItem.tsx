@@ -51,11 +51,11 @@ export function TaskListItem({
     const record = timeRecords?.find((timeRecord) => timeRecord.id === task.id);
     let user = 0;
     let recent = 0;
-    if (record && record.time.user > 0) {
+    if (record && record.time?.user > 0) {
       user = record.time.user;
       recent = record.time.recent || 0;
     }
-    if (task.time.user > 0) {
+    if (task.time?.user > 0) {
       user = task.time.user || 0;
       recent = task.time.recent;
     }
