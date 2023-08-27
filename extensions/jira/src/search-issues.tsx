@@ -48,22 +48,23 @@ export function SearchIssues({ query: initialQuery }: SearchIssuesProps) {
 
   return (
     <List
-      isLoading={isLoading}
+      // isLoading={isLoading}
       searchBarPlaceholder="Globally search issues across projects"
       onSearchTextChange={setQuery}
       searchText={query}
       throttle
     >
-      <List.Section
-        title={query.length > 0 ? "Search Results" : "Created Recently"}
-        subtitle={issues && issues.length > 1 ? `${issues.length} issues` : "1 issue"}
-      >
-        {issues?.map((issue) => {
-          return <IssueListItem key={issue.id} issue={issue} mutate={mutate} />;
-        })}
-      </List.Section>
+      {[]}
+      {/* <List.Section */}
+      {/*   title={query.length > 0 ? "Search Results" : "Created Recently"} */}
+      {/*   subtitle={issues && issues.length > 1 ? `${issues.length} issues` : "1 issue"} */}
+      {/* > */}
+      {/*   {issues ? issues.map((issue) => { */}
+      {/*     return <IssueListItem key={issue.id} issue={issue} mutate={mutate} />; */}
+      {/*   }) : []} */}
+      {/* </List.Section> */}
 
-      <IssueListEmptyView />
+      {/* <IssueListEmptyView /> */}
     </List>
   );
 }

@@ -67,7 +67,10 @@ export function withJiraCredentials(component: JSX.Element) {
   }, []);
 
   if (!jiraCredentials) {
-    if (environment.commandMode === "view") {
+    if (jiraCredentials === null) {
+  return component;
+    }
+    else if (environment.commandMode === "view") {
       // Using the <List /> component makes the placeholder buggy
       return <Detail isLoading />;
     } else if (environment.commandMode === "menu-bar") {
