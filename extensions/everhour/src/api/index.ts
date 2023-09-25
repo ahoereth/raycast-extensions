@@ -64,7 +64,8 @@ export const getRecentTasks = async (
   const timeRecords = (await (await response).json()) as TimeRecordResp[];
 
   if ("code" in timeRecords || timeRecords.length === 0) {
-    throw new Error("No recent tasks.");
+    // no recent tasks
+    return [];
   }
 
   const userId = timeRecords[0].user;
