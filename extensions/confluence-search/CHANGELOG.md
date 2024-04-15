@@ -1,8 +1,13 @@
 # Confluence Changelog
 
+## [Bug fix] - 2024-04-15
+
+- Fix a bug causing the Search panel to not work when it is the first one used
+    after the initial setup.
+
 ## [Bug fix] - 2023-11-19
 
-- Fixed a bug causing the People panel to not open
+- Fix a bug causing the People panel to not open.
 
 ## [Update] - 2023-03-01
 
