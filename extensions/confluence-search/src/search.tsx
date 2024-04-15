@@ -112,6 +112,13 @@ function useSearch(site?: any) {
         ...oldState,
         isLoading: true,
       }));
+      // During the very initial call to this function after setup, site is
+      // still undefined. Not catching that here can result in the Search
+      // component not working permanently as it won't be able to setup the site
+      // variable at all.
+      if (site === undefined) {
+        return;
+      }
       try {
         const results = await performSearch(site, searchText, spaceFilter, cancelRef.current.signal);
 
