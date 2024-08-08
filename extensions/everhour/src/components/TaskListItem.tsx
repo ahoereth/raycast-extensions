@@ -55,8 +55,7 @@ export function TaskListItem({
     if (record && record.time.recent > 0) {
       return `${formatSeconds(record.time.recent)} in the last 7 days`;
     }
-    if (recent) return `${formatSeconds(recent)} recently`;
-    if (user) return formatSeconds(user);
+    // if (user) return formatSeconds(user);
     return "";
   };
 

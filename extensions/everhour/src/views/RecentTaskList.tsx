@@ -87,7 +87,6 @@ export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments
       setIsLoading(true);
       const toast = await showToast(ToastStyle.Animated, "Fetching tasks");
       try {
-        console.log("collect", projectQuery, query, project);
         let result: Task[] = [];
         if (user && projectQuery && project === "_all" && projects.length) {
           const results = await Promise.all(
@@ -102,10 +101,9 @@ export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments
           result = await getRecentTasks();
         }
 
+        // Currently not filtering recentTasks by project -- todo?
         const relevant = joinTasks(recentTasks, activeTask);
-        const sticky = relevant.filter(({ name }) => {
-          return name.toLowerCase().indexOf(query) !== -1;
-        });
+        const sticky = relevant.filter(({ name }) => name.toLowerCase().indexOf(query) !== -1);
         for (let task of result) {
           if (timeRecords[task.id]) {
             task.time.recent = timeRecords[task.id];
@@ -135,10 +133,13 @@ export function RecentTaskList(props: LaunchProps<{ arguments: TaskListArguments
   }, [query, project, projects, user]);
 
   useEffect(() => {
-    const lookup = recentTasks.reduce((agg, { id, time }) => {
-      agg[id] = time.recent;
-      return agg;
-    }, {} as { [key: string]: number });
+    const lookup = recentTasks.reduce(
+      (agg, { id, time }) => {
+        agg[id] = time.recent;
+        return agg;
+      },
+      {} as { [key: string]: number }
+    );
     setTimeRecords(lookup);
     if (activeTask) {
       setTasks(addStickyTasks([activeTask], recentTasks));
