@@ -1,13 +1,9 @@
 import { useState, useEffect } from "react";
 import { List, Icon, showToast, ToastStyle } from "@raycast/api";
 import { TaskListItem } from "../components";
-import { getCurrentTimer, getTasks } from "../api";
-import { createResolvedToast } from "../utils";
+import { getCurrentTask, getProjectTasks } from "../api";
+import { createResolvedToast, filterTasks } from "../utils";
 import { Task } from "../types";
-
-const filterTasks = (records: Array<Task>, projectId: string) => {
-  return records.filter((record: Task) => record.projects[0] === projectId);
-};
 
 export function TaskList({
   projectId,
@@ -15,18 +11,18 @@ export function TaskList({
   refreshRecords,
 }: {
   projectId: string;
-  timeRecords: Array<Task>;
+  timeRecords?: Array<Task>;
   refreshRecords: () => Promise<Array<Task>>;
 }) {
-  const [activeTimerTaskId, setActiveTimerTaskId] = useState<null | string>(null);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [tasks, setTasks] = useState<Array<Task>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const refreshActiveTimer = async () => {
+  const refreshActiveTask = async () => {
     const toast = await showToast(ToastStyle.Animated, "Refreshing tasks");
     try {
-      const activeTimer = await getCurrentTimer();
-      setActiveTimerTaskId(activeTimer);
+      const activeTask = await getCurrentTask();
+      setActiveTask(activeTask);
       createResolvedToast(toast, "Tasks refreshed").success();
     } catch (error) {
       createResolvedToast(toast, "Failed to refresh tasks").error();
@@ -34,7 +30,7 @@ export function TaskList({
   };
 
   const fetchTasks = async () => {
-    const tasksResp = await getTasks(projectId);
+    const tasksResp = await getProjectTasks(projectId);
 
     setTasks(tasksResp);
   };
@@ -56,10 +52,10 @@ export function TaskList({
   }, []);
 
   useEffect(() => {
-    refreshActiveTimer();
-  }, [activeTimerTaskId]);
+    refreshActiveTask();
+  }, [activeTask]);
 
-  const recentTimeRecords = filterTasks(timeRecords, projectId);
+  const recentTimeRecords = timeRecords ? filterTasks(timeRecords, projectId) : [];
 
   const renderTasks = () => {
     if (tasks[0]) {
@@ -71,9 +67,9 @@ export function TaskList({
             fetchTasks();
             return refreshRecords();
           }}
-          refreshActiveTimer={refreshActiveTimer}
+          refreshActiveTask={refreshActiveTask}
           task={task}
-          hasActiveTimer={task.id === activeTimerTaskId}
+          hasActiveTimer={task.id === activeTask?.id}
         />
       ));
     }

@@ -3,7 +3,7 @@
   "name": "everhour",
   "title": "Everhour Time Tracking",
   "description": "Track time against projects",
-  "icon": "everhour-logo.png",
+  "icon": "everhour.png",
   "author": "farisaziz12",
   "contributors": [
     "ahoereth"
@@ -25,7 +25,15 @@
       "title": "Recent Tasks",
       "subtitle": "Everhour",
       "description": "List your recent tasks from the last seven days",
-      "mode": "view"
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "projectQuery",
+          "type": "text",
+          "placeholder": "Query Projects",
+          "required": false
+        }
+      ]
     }
   ],
   "preferences": [
@@ -40,6 +48,7 @@
   ],
   "dependencies": {
     "@raycast/api": "^1.25.0",
+    "@raycast/utils": "^1.5.0",
     "node-fetch": "^3.0.0"
   },
   "devDependencies": {
