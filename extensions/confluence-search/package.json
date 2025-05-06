@@ -5,10 +5,8 @@
   "description": "Quickly navigate, create and search Confluence through Raycast.",
   "icon": "command-icon.png",
   "author": "tbrown",
-  "categories": [
-    "Productivity",
-    "Documentation"
-  ],
+  "contributors": ["ahoereth"],
+  "categories": ["Productivity", "Documentation"],
   "license": "MIT",
   "commands": [
     {
